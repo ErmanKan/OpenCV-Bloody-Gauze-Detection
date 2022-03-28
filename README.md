@@ -1,4 +1,7 @@
 # OpenCV-Bloody-Gauze-Detection
 A small image processing application that crops out the bloody gauze out of the picture.
-It is still majorly incomplete, as image processing part is proving to be difficult
+
+# Drastically improved the blood detection
+Blood detection is providing satisfactory results now and it reliably create a rectangle around the blood.
+But it is still incomplete as it requires to crop out just a tiny bit out from the gauze, and the provided pictures are not uniform in angles.
 
