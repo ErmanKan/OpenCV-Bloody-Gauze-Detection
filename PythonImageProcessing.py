@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import imutils
+from matplotlib import pyplot as plt
 
 def ResizeWithAspectRatio(image, width=None, height=None, inter=cv2.INTER_AREA):
     dim = None
@@ -28,58 +29,82 @@ def auto_canny(image, sigma=0.33):
     # return the edged image
     return edged
 
-path0 = 'Half_Blood\_50 kan'
-path1 = 'Half_Blood\İkci seri\_50 kan (2. grup)'
-path2 = 'Half_Blood\Yari kan'
+path0 = 'Images/test/1 ml(0.5ml kan)/' 
+#20190828_111433.jpg
+#20190418_094633.jpg
 
+path1 = 'Images/test/7 ml(3.5ml kan)/'
+#20190828_115509.jpg
+#20190418_105801.jpg
 
+path2 = 'Images/test/9 ml(4.5ml kan)/'
+#20190828_120744.jpg
+#20190418_111400.jpg
+
+red = np.uint8([[[0,0,255]]])
+hsv_red = cv2.cvtColor(red,cv2.COLOR_BGR2HSV)
 
 ##Read the image
-img = cv2.imread('Half_Blood/Yari kan/12 ml(6ml kan)/20190418_114419.jpg')
-img = img[300:,:]
+img = cv2.imread(path2 + '20190418_111400.jpg',1)
+img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
-##Convert to grayscale
-gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+RED_MIN = np.array([0, 150, 150],np.uint8)
+RED_MAX = np.array([20, 255, 255],np.uint8)
 
+RED_HIGH_MIN = np.array([160,150,150],np.uint8)
+RED_HIGH_MAX = np.array([180,255,255],np.uint8)
 
-ret, thresh = cv2.threshold(gray, 180, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-blur = cv2.GaussianBlur(thresh,(5,5),0)
+y_lower = 800
+y_upper = 3900
+x_lower = 200
+x_upper = 1900
 
-# Perform morphology
-kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (7,7))
-image_close = cv2.morphologyEx(blur, cv2.MORPH_CLOSE, kernel, iterations = 1)
+mask0 = cv2.inRange(img_hsv, RED_MIN, RED_MAX)
+mask1 = cv2.inRange(img_hsv, RED_HIGH_MIN, RED_HIGH_MAX)
 
-#Apply canny edge detection
-canny = cv2.Canny(image_close,30,100)
-auto_canny = auto_canny(image_close)
+threshed = mask0 + mask1
+#thresholding and blurring
+blur = cv2.medianBlur(threshed,9)
 
 #Apply Laplacian edge detection
 laplacian = cv2.Laplacian(blur, cv2.CV_8UC1)
 
-#Apply Sobel Edge Detection x axis
-sobelx = cv2.Sobel(blur,cv2.CV_8UC1,1,0,ksize=5)
-#Apply Sobel Edge Detection y axis
-sobely = cv2.Sobel(blur,cv2.CV_8UC1,0,1,ksize=5)
 
-#contours
-contours, hierarchy = cv2.findContours(blur, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-cntsSorted = sorted(contours, key=lambda x: cv2.contourArea(x))
-x,y,w,h = cv2.boundingRect(cntsSorted[-1])
-imglol = img.copy()
-crop = imglol[y: y+h, x: x+w]
-cv2.fillPoly(image_close, cntsSorted[-1], [255,255,255])
-cv2.drawContours(imglol, cntsSorted[-1], -1, (0,255,0), thickness = 2,lineType = cv2.LINE_AA)
-
-"""
-cnts = cv2.findContours(image_close, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-cnts = cnts[0] if len(cnts) == 2 else cnts[1]
-
-"""
-
-#Find the edges where the size is bigger than zero
-pts = np.argwhere(image_close == 0)
+#Find the pixels where the result is bigger than N value
+pts = np.argwhere(laplacian > 0)
 y1,x1 = pts.min(axis = 0)
 y2,x2 = pts.max(axis = 0)
+
+y1og = y1
+y2og=y2
+x1og=x1
+x2og=x2
+
+#y1 > 800  y2 > 3900
+#x1 > 200  x2 > 1700
+
+
+error = False
+iteration = 0
+while iteration < 500:
+    iteration+=1
+    print(error)
+    print("Iteration: ", iteration)
+    if(x1 > x_lower):
+        x1 -= 5
+        print("x1 is higher than x_lower")
+    if(x2 < x_upper):
+        x2 +=5
+        print("x2 is lower than x_higher")
+    if(y1 > y_lower):
+        y1 -=20
+        print("y1 is higher than y_lower")
+    if(y2 < y_upper):
+        y2 +=2
+        print("y2 is lower than y_higher")
+        
+    print("x1 is {x1}, x2 is {x2}, y1 is {y1}, y2 is {y2}".format(x1=x1,x2=x2,y1=y1,y2=y2))
+
 
 cropped = img[y1:y2, x1:x2]
 cv2.imwrite("cropped.png", cropped)
@@ -87,26 +112,7 @@ cv2.imwrite("cropped.png", cropped)
 tagged = cv2.rectangle(img.copy(), (x1,y1), (x2,y2), (0,255,0), 3, cv2.LINE_AA)
 
 
-resize = ResizeWithAspectRatio(image_close, height=960)
+resize = ResizeWithAspectRatio(tagged, height=960)
+
 cv2.imshow("image",resize)
 cv2.waitKey(0)
-
-"""
-dsize = (124, 124)
-thresh_array = []
-lower = np.array([0, 0, 66])
-upper = np.array([91, 243, 255])
-
-image = cv2.imread('Half_Blood/Yari kan/1 ml(0.5ml kam)/20190418_114436.jpg')
-mask = cv2.inRange(image, lower, upper)
-output = cv2.bitwise_and(image, image, mask=mask)
-img_gray = cv2.cvtColor(output, cv2.COLOR_BGR2GRAY)
-thresh = cv2.threshold(img_gray, 0, 255, cv2.THRESH_BINARY)[1]
-thresh = cv2.resize(thresh, dsize)
-thresh = thresh.reshape(-1)
-thresh_array.append(thresh)
-
-resize = ResizeWithAspectRatio(img_gray, height=960)
-cv2.imshow("image",resize)
-cv2.waitKey(0)
-"""
