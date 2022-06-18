@@ -5,6 +5,9 @@ A small image processing application that was planned to crop out the bloody gau
 Blood detection is providing satisfactory results now and it reliably create a rectangle around the blood.
 But it is still incomplete as it requires to crop out just a tiny bit out from the gauze, and the provided pictures are not uniform in angles.
 
+# model_train.py is the file with the machine learning models
+While the image processing file is the one I have worked on to crop out the gauze
+
 # The models haven't been trained with the cropped parts
 Instead they were trained by the hu moments and the histogram values of the images in grayscale color space.
 
