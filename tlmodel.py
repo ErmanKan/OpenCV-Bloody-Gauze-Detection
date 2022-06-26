@@ -47,8 +47,8 @@ model.compile(
 )
 print(model.summary())
 
-EPOCHS = 20
-BATCH_SIZE = 32
+EPOCHS = 200
+BATCH_SIZE = 64
 history = model.fit(train_generator,
                     steps_per_epoch=train_generator.samples // BATCH_SIZE,
                     epochs=EPOCHS,
@@ -105,6 +105,8 @@ tf.keras.models.save_model(model, keras_file)
 print(train_generator.class_indices)
 tf.saved_model.save(model,"E:\Erman\Ders\Tez")
 
+
+"""
 converter = tf.lite.TFLiteConverter.from_saved_model("E:\Erman\Ders\Tez")
 tflite_model = converter.convert()
 with open('model.tflite', 'wb') as f:
@@ -113,5 +115,5 @@ with open('model.tflite', 'wb') as f:
 labels = '\n'.join(sorted(train_generator.class_indices.keys()))
 with open('labels.txt','w') as f:
     f.write(labels)
-
+"""
 
